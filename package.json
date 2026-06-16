@@ -1,0 +1,54 @@
+{
+  "name": "kenteken-kit",
+  "version": "0.1.0",
+  "description": "Tiny Dutch kenteken formatter, parser, and validator toolkit.",
+  "type": "module",
+  "license": "MIT",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "typecheck": "tsc --noEmit",
+    "prepack": "npm run typecheck && npm test"
+  },
+  "keywords": [
+    "kenteken",
+    "registration-plate",
+    "number-plate",
+    "dutch",
+    "netherlands",
+    "formatter",
+    "validator",
+    "rdw"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/scan-kenteken/kenteken-kit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/scan-kenteken/kenteken-kit/issues"
+  },
+  "homepage": "https://github.com/scan-kenteken/kenteken-kit#readme",
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
