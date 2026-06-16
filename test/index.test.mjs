@@ -2,18 +2,17 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   FORBIDDEN_COMBINATIONS,
-  SIDE_CODES,
-  format,
+  KENTEKEN_SERIES,
   formatKenteken,
   formatKentekenPartial,
   isKenteken,
-  normalize,
+  normalizeKenteken,
   parseKenteken,
 } from "../dist/index.js";
 
 describe("normalizeKenteken", () => {
   it("uppercases and strips separators", () => {
-    assert.equal(normalize(" kjr-50.s "), "KJR50S");
+    assert.equal(normalizeKenteken(" kjr-50.s "), "KJR50S");
   });
 });
 
@@ -35,16 +34,18 @@ describe("formatKenteken", () => {
     ["123HJ4", "123-HJ-4", 14],
   ];
 
-  for (const [raw, formatted, sideCode] of examples) {
-    it(`formats sidecode ${sideCode}`, () => {
+  for (const [raw, formatted, series] of examples) {
+    it(`formats series ${series}`, () => {
       assert.equal(formatKenteken(raw), formatted);
-      assert.equal(parseKenteken(raw).sideCode, sideCode);
+      assert.equal(parseKenteken(raw).series, series);
     });
   }
 
-  it("exports sidecode metadata", () => {
-    assert.equal(SIDE_CODES.length, 14);
-    assert.equal(SIDE_CODES[9].pattern, "X-999-XX");
+  it("exports derived series metadata", () => {
+    assert.equal(KENTEKEN_SERIES.length, 14);
+    assert.equal(KENTEKEN_SERIES[9].pattern, "X-999-XX");
+    assert.equal(KENTEKEN_SERIES[9].mask, "LDDDLL");
+    assert.deepEqual(KENTEKEN_SERIES[9].groups, [1, 3, 2]);
   });
 });
 
@@ -67,15 +68,16 @@ describe("parseKenteken", () => {
     assert.equal(parsed.isValid, true);
     assert.equal(parsed.normalized, "G001BB");
     assert.equal(parsed.formatted, "G-001-BB");
-    assert.equal(parsed.sideCode, 10);
+    assert.equal(parsed.series, 10);
+    assert.equal(parsed.seriesPattern, "X-999-XX");
     assert.deepEqual(parsed.issues, []);
   });
 
-  it("allows vowels in older sidecodes before sidecode 4", () => {
+  it("allows vowels in older series before series 4", () => {
     assert.equal(isKenteken("AB-12-34"), true);
   });
 
-  it("rejects disallowed letters in sidecode 4 and newer", () => {
+  it("rejects disallowed letters in series 4 and newer", () => {
     const parsed = parseKenteken("A-001-QC");
 
     assert.equal(parsed.isValid, false);
@@ -148,6 +150,6 @@ describe("parseKenteken", () => {
   it("reports length and shape problems", () => {
     assert.deepEqual(parseKenteken("AB-12").issues.map((issue) => issue.code), ["too_short"]);
     assert.deepEqual(parseKenteken("AB-12-34-56").issues.map((issue) => issue.code), ["too_long"]);
-    assert.deepEqual(parseKenteken("ABC-123").issues.map((issue) => issue.code), ["unknown_sidecode"]);
+    assert.deepEqual(parseKenteken("ABC-123").issues.map((issue) => issue.code), ["unknown_series"]);
   });
 });

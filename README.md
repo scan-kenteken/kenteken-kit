@@ -38,8 +38,8 @@ parseKenteken("G-001-BB");
 //   input: "G-001-BB",
 //   normalized: "G001BB",
 //   formatted: "G-001-BB",
-//   sideCode: 10,
-//   sideCodePattern: "X-999-XX",
+//   series: 10,
+//   seriesPattern: "X-999-XX",
 //   isValid: true,
 //   issues: []
 // }
@@ -54,23 +54,23 @@ Uppercases `raw` and removes every character except ASCII letters and digits.
 ### `formatKenteken(raw)`
 
 Returns a normalized kenteken with RDW-style dash groups when the value matches one
-of the supported sidecodes. Unknown 6-character shapes are returned normalized.
+of the supported series. Unknown 6-character shapes are returned normalized.
 
 ### `formatKentekenPartial(raw)`
 
 Formats up to six normalized characters for live input fields. When a partial
-value has a single matching sidecode prefix, it uses that sidecode's grouping.
+value has a single matching series prefix, it uses that series' grouping.
 Otherwise it falls back to simple letter/digit runs.
 
 ### `parseKenteken(raw)`
 
-Returns normalized text, formatted text, sidecode metadata, and validation issues.
+Returns normalized text, formatted text, series metadata, and validation issues.
 
 Issue codes:
 
 - `too_short`
 - `too_long`
-- `unknown_sidecode`
+- `unknown_series`
 - `disallowed_letter`
 - `forbidden_combination`
 
@@ -78,21 +78,17 @@ Issue codes:
 
 Convenience boolean around `parseKenteken(raw).isValid`.
 
-### Compatibility aliases
+### `KENTEKEN_SERIES`
 
-For small existing codebases, these aliases are also exported:
-
-- `normalize`
-- `format`
-- `formatPartial`
-- `isValidDutchPlate`
+Metadata for the supported Dutch kenteken series. Each item includes a series
+number, display pattern, normalized mask, group lengths, and example.
 
 ## Rules and scope
 
-The formatter supports 14 common Dutch sidecode shapes. Validation applies
-general RDW-style letter and combination rules, but this package is not an
-issuance check. It does not tell you whether a specific kenteken actually exists,
-belongs to a specific vehicle category, or was issued on a specific date.
+The formatter supports 14 common Dutch kenteken series. Validation applies general
+RDW-style letter and combination rules, but this package is not an issuance
+check. It does not tell you whether a specific kenteken actually exists, belongs
+to a specific vehicle category, or was issued on a specific date.
 
 For vehicle data, use RDW open data or the official RDW kentekencheck. This
 package is not affiliated with RDW.
@@ -145,7 +141,7 @@ npm pack
 Install the generated tarball from another project:
 
 ```sh
-npm install ../path/to/kenteken-kit-0.1.0.tgz
+npm install ../path/to/kenteken-kit-0.2.0.tgz
 ```
 
 After publishing, install from npm:
@@ -158,7 +154,7 @@ Existing codebases can also wrap the exports behind their own local adapter:
 
 ```ts
 export {
-  SIDE_CODES,
+  KENTEKEN_SERIES,
   formatKenteken as format,
   formatKentekenPartial as formatPartial,
   isKenteken as isValidDutchPlate,

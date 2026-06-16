@@ -1,6 +1,28 @@
 const KENTEKEN_LENGTH = 6;
+const EXAMPLE_LETTERS = "HJKLMN";
+const EXAMPLE_DIGITS = "123456";
 
-export type KentekenSideCodeNumber =
+type SeriesGroups = readonly [string, string, string];
+type GroupSizes = readonly [number, number, number];
+
+const SERIES_GROUPS = [
+  ["LL", "DD", "DD"],
+  ["DD", "DD", "LL"],
+  ["DD", "LL", "DD"],
+  ["LL", "DD", "LL"],
+  ["LL", "LL", "DD"],
+  ["DD", "LL", "LL"],
+  ["DD", "LLL", "D"],
+  ["D", "LLL", "DD"],
+  ["LL", "DDD", "L"],
+  ["L", "DDD", "LL"],
+  ["LLL", "DD", "L"],
+  ["L", "DD", "LLL"],
+  ["D", "LL", "DDD"],
+  ["DDD", "LL", "D"],
+] as const satisfies readonly SeriesGroups[];
+
+export type KentekenSeriesNumber =
   | 1
   | 2
   | 3
@@ -19,15 +41,15 @@ export type KentekenSideCodeNumber =
 export type KentekenIssueCode =
   | "too_short"
   | "too_long"
-  | "unknown_sidecode"
+  | "unknown_series"
   | "disallowed_letter"
   | "forbidden_combination";
 
-export interface KentekenSideCode {
-  readonly sideCode: KentekenSideCodeNumber;
+export interface KentekenSeries {
+  readonly series: KentekenSeriesNumber;
   readonly pattern: string;
   readonly mask: string;
-  readonly groups: readonly [number, number, number];
+  readonly groups: GroupSizes;
   readonly example: string;
 }
 
@@ -41,28 +63,15 @@ export interface KentekenParseResult {
   readonly input: string;
   readonly normalized: string;
   readonly formatted: string;
-  readonly sideCode: KentekenSideCodeNumber | null;
-  readonly sideCodePattern: string | null;
+  readonly series: KentekenSeriesNumber | null;
+  readonly seriesPattern: string | null;
   readonly isValid: boolean;
   readonly issues: readonly KentekenIssue[];
 }
 
-export const SIDE_CODES = [
-  { sideCode: 1, pattern: "XX-99-99", mask: "LLDDDD", groups: [2, 2, 2], example: "HJ-12-34" },
-  { sideCode: 2, pattern: "99-99-XX", mask: "DDDDLL", groups: [2, 2, 2], example: "12-34-HJ" },
-  { sideCode: 3, pattern: "99-XX-99", mask: "DDLLDD", groups: [2, 2, 2], example: "12-HJ-34" },
-  { sideCode: 4, pattern: "XX-99-XX", mask: "LLDDLL", groups: [2, 2, 2], example: "HJ-12-KL" },
-  { sideCode: 5, pattern: "XX-XX-99", mask: "LLLLDD", groups: [2, 2, 2], example: "HJ-KL-12" },
-  { sideCode: 6, pattern: "99-XX-XX", mask: "DDLLLL", groups: [2, 2, 2], example: "12-HJ-KL" },
-  { sideCode: 7, pattern: "99-XXX-9", mask: "DDLLLD", groups: [2, 3, 1], example: "12-HJK-3" },
-  { sideCode: 8, pattern: "9-XXX-99", mask: "DLLLDD", groups: [1, 3, 2], example: "1-HJK-23" },
-  { sideCode: 9, pattern: "XX-999-X", mask: "LLDDDL", groups: [2, 3, 1], example: "HJ-123-K" },
-  { sideCode: 10, pattern: "X-999-XX", mask: "LDDDLL", groups: [1, 3, 2], example: "H-123-JK" },
-  { sideCode: 11, pattern: "XXX-99-X", mask: "LLLDDL", groups: [3, 2, 1], example: "HJK-12-L" },
-  { sideCode: 12, pattern: "X-99-XXX", mask: "LDDLLL", groups: [1, 2, 3], example: "H-12-JKL" },
-  { sideCode: 13, pattern: "9-XX-999", mask: "DLLDDD", groups: [1, 2, 3], example: "1-HJ-234" },
-  { sideCode: 14, pattern: "999-XX-9", mask: "DDDLLD", groups: [3, 2, 1], example: "123-HJ-4" },
-] as const satisfies readonly KentekenSideCode[];
+export const KENTEKEN_SERIES: readonly KentekenSeries[] = SERIES_GROUPS.map((groups, index) =>
+  createSeries((index + 1) as KentekenSeriesNumber, groups),
+);
 
 export const FORBIDDEN_COMBINATIONS = [
   "GVD",
@@ -81,7 +90,7 @@ export const FORBIDDEN_COMBINATIONS = [
 ] as const;
 
 const ALWAYS_DISALLOWED_LETTERS = ["C", "Q"] as const;
-const SIDE_CODE_4_PLUS_DISALLOWED_LETTERS = ["A", "E", "I", "O", "U"] as const;
+const SERIES_4_PLUS_DISALLOWED_LETTERS = ["A", "E", "I", "O", "U"] as const;
 
 export function normalizeKenteken(raw: string): string {
   return raw.toUpperCase().replace(/[^A-Z0-9]/g, "");
@@ -94,8 +103,7 @@ export function formatKenteken(raw: string): string {
     return normalized;
   }
 
-  const sideCode = findSideCode(normalized);
-  return sideCode ? formatWithGroups(normalized, sideCode.groups) : formatByCharacterRuns(normalized);
+  return formatNormalized(normalized, findSeries(normalized));
 }
 
 export function formatKentekenPartial(raw: string): string {
@@ -106,10 +114,10 @@ export function formatKentekenPartial(raw: string): string {
   }
 
   if (normalized.length === KENTEKEN_LENGTH) {
-    return formatKenteken(normalized);
+    return formatNormalized(normalized, findSeries(normalized));
   }
 
-  const candidates = SIDE_CODES.filter(({ mask }) => matchesMaskPrefix(normalized, mask));
+  const candidates = KENTEKEN_SERIES.filter(({ mask }) => matchesMaskPrefix(normalized, mask));
   const candidate = candidates[0];
 
   if (candidates.length === 1 && candidate) {
@@ -122,7 +130,7 @@ export function formatKentekenPartial(raw: string): string {
 export function parseKenteken(raw: string): KentekenParseResult {
   const normalized = normalizeKenteken(raw);
   const issues: KentekenIssue[] = [];
-  let sideCode: KentekenSideCode | null = null;
+  let series: KentekenSeries | null = null;
 
   if (normalized.length < KENTEKEN_LENGTH) {
     issues.push({
@@ -135,25 +143,25 @@ export function parseKenteken(raw: string): KentekenParseResult {
       message: "A kenteken must contain 6 letters or digits.",
     });
   } else {
-    sideCode = findSideCode(normalized);
+    series = findSeries(normalized);
 
-    if (!sideCode) {
+    if (!series) {
       issues.push({
-        code: "unknown_sidecode",
-        message: "The letters and digits do not match a supported Dutch sidecode.",
+        code: "unknown_series",
+        message: "The letters and digits do not match a supported Dutch kenteken series.",
       });
     } else {
-      issues.push(...findDisallowedLetterIssues(normalized, sideCode));
-      issues.push(...findForbiddenCombinationIssues(normalized, sideCode));
+      issues.push(...findDisallowedLetterIssues(normalized, series));
+      issues.push(...findForbiddenCombinationIssues(normalized, series));
     }
   }
 
   return {
     input: raw,
     normalized,
-    formatted: normalized.length === KENTEKEN_LENGTH ? formatKenteken(normalized) : formatKentekenPartial(normalized),
-    sideCode: sideCode?.sideCode ?? null,
-    sideCodePattern: sideCode?.pattern ?? null,
+    formatted: formatParsedValue(normalized, series),
+    series: series?.series ?? null,
+    seriesPattern: series?.pattern ?? null,
     isValid: issues.length === 0,
     issues,
   };
@@ -163,38 +171,69 @@ export function isKenteken(raw: string): boolean {
   return parseKenteken(raw).isValid;
 }
 
-export const normalize = normalizeKenteken;
-export const format = formatKenteken;
-export const formatPartial = formatKentekenPartial;
-export const isValidDutchPlate = isKenteken;
-
-function findSideCode(normalized: string): KentekenSideCode | null {
-  return SIDE_CODES.find(({ mask }) => matchesMask(normalized, mask)) ?? null;
+function createSeries(series: KentekenSeriesNumber, groups: SeriesGroups): KentekenSeries {
+  return {
+    series,
+    pattern: groups.map(formatPatternGroup).join("-"),
+    mask: groups.join(""),
+    groups: groupSizes(groups),
+    example: groups.map(formatExampleGroup).join("-"),
+  };
 }
 
-function findDisallowedLetterIssues(normalized: string, sideCode: KentekenSideCode): KentekenIssue[] {
+function groupSizes(groups: SeriesGroups): GroupSizes {
+  return [groups[0].length, groups[1].length, groups[2].length];
+}
+
+function formatPatternGroup(group: string): string {
+  return group.replace(/L/g, "X").replace(/D/g, "9");
+}
+
+function formatExampleGroup(group: string): string {
+  const sample = group[0] === "L" ? EXAMPLE_LETTERS : EXAMPLE_DIGITS;
+  return sample.slice(0, group.length);
+}
+
+function formatParsedValue(normalized: string, series: KentekenSeries | null): string {
+  if (normalized.length < KENTEKEN_LENGTH) {
+    return formatKentekenPartial(normalized);
+  }
+
+  if (normalized.length === KENTEKEN_LENGTH) {
+    return formatNormalized(normalized, series);
+  }
+
+  return normalized;
+}
+
+function formatNormalized(normalized: string, series: KentekenSeries | null): string {
+  return series ? formatWithGroups(normalized, series.groups) : formatByCharacterRuns(normalized);
+}
+
+function findSeries(normalized: string): KentekenSeries | null {
+  return KENTEKEN_SERIES.find(({ mask }) => matchesMask(normalized, mask)) ?? null;
+}
+
+function findDisallowedLetterIssues(normalized: string, series: KentekenSeries): KentekenIssue[] {
   const disallowedLetters = new Set<string>(ALWAYS_DISALLOWED_LETTERS);
 
-  if (sideCode.sideCode >= 4) {
-    for (const letter of SIDE_CODE_4_PLUS_DISALLOWED_LETTERS) {
+  if (series.series >= 4) {
+    for (const letter of SERIES_4_PLUS_DISALLOWED_LETTERS) {
       disallowedLetters.add(letter);
     }
   }
 
-  const found = unique([...normalized].filter((char) => disallowedLetters.has(char)));
-
-  return found.map((letter) => ({
+  return [...new Set([...normalized].filter((char) => disallowedLetters.has(char)))].map((letter) => ({
     code: "disallowed_letter",
     message: `Letter "${letter}" is not used in this kenteken series.`,
     value: letter,
   }));
 }
 
-function findForbiddenCombinationIssues(normalized: string, sideCode: KentekenSideCode): KentekenIssue[] {
-  const letterGroups = getLetterGroups(normalized, sideCode);
+function findForbiddenCombinationIssues(normalized: string, series: KentekenSeries): KentekenIssue[] {
   const found = new Set<string>();
 
-  for (const group of letterGroups) {
+  for (const group of getLetterGroups(normalized, series)) {
     for (const combination of FORBIDDEN_COMBINATIONS) {
       if (group.includes(combination)) {
         found.add(combination);
@@ -209,14 +248,11 @@ function findForbiddenCombinationIssues(normalized: string, sideCode: KentekenSi
   }));
 }
 
-function getLetterGroups(normalized: string, sideCode: KentekenSideCode): string[] {
-  const parts = splitByGroups(normalized, sideCode.groups);
-  const maskParts = splitByGroups(sideCode.mask, sideCode.groups);
-
-  return parts.filter((_, index) => /^L+$/.test(maskParts[index] ?? ""));
+function getLetterGroups(normalized: string, series: KentekenSeries): string[] {
+  return splitByGroups(normalized, series.groups).filter((group) => /^[A-Z]+$/.test(group));
 }
 
-function splitByGroups(value: string, groups: readonly [number, number, number]): string[] {
+function splitByGroups(value: string, groups: GroupSizes): string[] {
   const parts: string[] = [];
   let offset = 0;
 
@@ -237,7 +273,9 @@ function matchesMaskPrefix(value: string, mask: string): boolean {
 }
 
 function matchesMaskCharacter(char: string, mask: string): boolean {
-  return mask === "L" ? isAsciiLetter(char) : isAsciiDigit(char);
+  if (mask === "L") return isAsciiLetter(char);
+  if (mask === "D") return isAsciiDigit(char);
+  return false;
 }
 
 function isAsciiLetter(char: string): boolean {
@@ -248,7 +286,7 @@ function isAsciiDigit(char: string): boolean {
   return char >= "0" && char <= "9";
 }
 
-function formatWithGroups(value: string, groups: readonly [number, number, number]): string {
+function formatWithGroups(value: string, groups: GroupSizes): string {
   return splitByGroups(value, groups).filter(Boolean).join("-");
 }
 
@@ -265,8 +303,4 @@ function formatPartialByCharacterRuns(value: string): string {
   }
 
   return groups.map((group) => group.match(/.{1,2}/g)?.join("-") ?? group).join("-");
-}
-
-function unique<T>(values: readonly T[]): T[] {
-  return [...new Set(values)];
 }
