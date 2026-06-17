@@ -2,7 +2,9 @@
 
 `formatKentekenPartial` formats live input as a Dutch plate while the user types.
 
-<video src="./assets/format-kenteken-partial-demo.mp4" autoplay muted loop playsinline controls width="100%"></video>
+![formatKentekenPartial demo](./assets/format-kenteken-partial-demo.gif)
+
+[Watch the MP4 demo](./assets/format-kenteken-partial-demo.mp4)
 
 Tiny Dutch kenteken formatting, parsing, and validation for JavaScript, TypeScript, and Kotlin.
 
