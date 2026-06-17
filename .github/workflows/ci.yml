@@ -82,7 +82,11 @@ jobs:
           if npm view "${NAME}@${VERSION}" version --registry=https://registry.npmjs.org >/dev/null 2>&1; then
             echo "${NAME}@${VERSION} is already published on npm; skipping npm publish"
           else
-            npm publish
+            npm run typecheck
+            npm test
+            trap 'node scripts/pack-readme.mjs restore' EXIT
+            node scripts/pack-readme.mjs npm
+            npm publish --ignore-scripts
           fi
 
       - name: Publish to Maven Central
