@@ -74,40 +74,6 @@ Check that npm, Maven, and the repo-root `VERSION` file agree:
 npm run version:check
 ```
 
-## Releasing
-
-One version (`VERSION` at the repo root) drives both npm and Maven publishes.
-
-```sh
-npm run version:bump patch   # or minor | major
-git add VERSION package.json package-lock.json kotlin/build.gradle.kts
-git commit -m "Release v$(cat VERSION)"
-git tag "v$(cat VERSION)"
-git push origin main --tags
-```
-
-The `ci.yml` workflow then:
-
-1. Runs npm and Kotlin tests plus `npm run version:check`
-2. Publishes to npm through Trusted Publishing
-3. Publishes to Maven Central as `io.github.scan-kenteken:kenteken-kit`
-
-npm Trusted Publishing must list workflow `ci.yml` for
-`scan-kenteken/kenteken-kit`.
-
-GitHub secrets required for Maven Central:
-
-| Secret | Purpose |
-|---|---|
-| `CENTRAL_PORTAL_USERNAME` | Portal user token username |
-| `CENTRAL_PORTAL_PASSWORD` | Portal user token password |
-| `SIGNING_KEY` | ASCII-armored PGP private key |
-| `SIGNING_PASSWORD` | Only if your key has a passphrase |
-
-After CI uploads to Maven Central, open
-[central.sonatype.com/publishing](https://central.sonatype.com/publishing) to
-validate and publish the deployment.
-
 ## License
 
 MIT

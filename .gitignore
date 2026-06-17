@@ -10,3 +10,4 @@ coverage/
 /kotlin/.gradle/
 /kotlin/build/
 /kotlin/gradle.properties
+AGENTS.local.md
