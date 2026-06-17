@@ -64,10 +64,26 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: Verify Maven release secrets
+        env:
+          CENTRAL_PORTAL_USERNAME: ${{ secrets.CENTRAL_PORTAL_USERNAME }}
+          CENTRAL_PORTAL_PASSWORD: ${{ secrets.CENTRAL_PORTAL_PASSWORD }}
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+        run: |
+          test -n "$CENTRAL_PORTAL_USERNAME" || { echo "CENTRAL_PORTAL_USERNAME is not set"; exit 1; }
+          test -n "$CENTRAL_PORTAL_PASSWORD" || { echo "CENTRAL_PORTAL_PASSWORD is not set"; exit 1; }
+          test -n "$SIGNING_KEY" || { echo "SIGNING_KEY is not set"; exit 1; }
+
       - name: Publish to npm
         run: |
           npm ci
-          npm publish
+          NAME="$(node -p "require('./package.json').name")"
+          VERSION="$(node -p "require('./package.json').version")"
+          if npm view "${NAME}@${VERSION}" version --registry=https://registry.npmjs.org >/dev/null 2>&1; then
+            echo "${NAME}@${VERSION} is already published on npm; skipping npm publish"
+          else
+            npm publish
+          fi
 
       - name: Publish to Maven Central
         working-directory: kotlin
