@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
-import { execSync } from "node:child_process";
 
 const version = readFileSync("VERSION", "utf8").trim();
 const pkg = JSON.parse(readFileSync("package.json", "utf8"));
+const kotlinBuild = readFileSync("kotlin/build.gradle.kts", "utf8");
 const kotlinReadme = readFileSync("kotlin/README.md", "utf8");
 
 if (pkg.version !== version) {
@@ -10,13 +10,8 @@ if (pkg.version !== version) {
   process.exit(1);
 }
 
-const kotlinVersion = execSync("./gradlew -q printVersion", {
-  cwd: "kotlin",
-  encoding: "utf8",
-}).trim();
-
-if (kotlinVersion !== version) {
-  console.error(`kotlin (${kotlinVersion}) does not match VERSION (${version})`);
+if (!kotlinBuild.includes('version = file("../VERSION").readText().trim()')) {
+  console.error("kotlin/build.gradle.kts must read version from ../VERSION");
   process.exit(1);
 }
 
