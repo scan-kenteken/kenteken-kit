@@ -1,6 +1,6 @@
 {
   "name": "kenteken-kit",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Tiny Dutch kenteken formatter, parser, and validator toolkit.",
   "type": "module",
   "license": "MIT",
@@ -32,7 +32,8 @@
     "version:sync": "node scripts/sync-version.mjs",
     "version:check": "node scripts/check-versions.mjs",
     "version:bump": "node scripts/bump-version.mjs",
-    "prepack": "npm run typecheck && npm test"
+    "prepack": "npm run typecheck && npm test && node scripts/pack-readme.mjs npm",
+    "postpack": "node scripts/pack-readme.mjs restore"
   },
   "keywords": [
     "kenteken",

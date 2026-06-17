@@ -20,4 +20,10 @@ if (lock.packages?.[""]) {
 }
 writeFileSync(lockPath, `${JSON.stringify(lock, null, 2)}\n`);
 
+const kotlinReadmePath = "kotlin/README.md";
+const kotlinReadme = readFileSync(kotlinReadmePath, "utf8")
+  .replace(/io\.github\.scan-kenteken:kenteken-kit:[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.]+)?/g, `io.github.scan-kenteken:kenteken-kit:${version}`)
+  .replace(/<version>[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.]+)?<\/version>/g, `<version>${version}</version>`);
+writeFileSync(kotlinReadmePath, kotlinReadme);
+
 console.log(`Synced npm version to ${version}`);
