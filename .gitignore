@@ -5,3 +5,8 @@ coverage/
 .DS_Store
 .env
 .env.*
+/download
+/demo-generator/
+/kotlin/.gradle/
+/kotlin/build/
+/kotlin/gradle.properties

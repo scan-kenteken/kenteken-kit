@@ -1,6 +1,10 @@
 # kenteken-kit
 
-Tiny Dutch kenteken formatting, parsing, and validation for JavaScript and TypeScript.
+`formatKentekenPartial` formats live input as a Dutch plate while the user types.
+
+<video src="./assets/format-kenteken-partial-demo.mp4" autoplay muted loop playsinline controls width="100%"></video>
+
+Tiny Dutch kenteken formatting, parsing, and validation for JavaScript, TypeScript, and Kotlin.
 
 This package is intentionally small:
 
@@ -141,13 +145,52 @@ npm pack
 Install the generated tarball from another project:
 
 ```sh
-npm install ../path/to/kenteken-kit-0.2.0.tgz
+npm install ../path/to/kenteken-kit-0.2.2.tgz
 ```
 
 After publishing, install from npm:
 
 ```sh
 npm install kenteken-kit
+```
+
+## Releasing
+
+One version (`VERSION` at the repo root) drives both npm and Maven publishes.
+
+### Bump and release
+
+```sh
+npm run version:bump patch   # or minor | major
+git add VERSION package.json package-lock.json
+git commit -m "Release v$(cat VERSION)"
+git tag "v$(cat VERSION)"
+git push origin main --tags
+```
+
+The **`ci.yml`** workflow then:
+
+1. Runs npm + Kotlin tests and `npm run version:check`
+2. Publishes to **npm** via [Trusted Publishing](https://docs.npmjs.com/trusted-publishers/) (OIDC, no `NPM_TOKEN`)
+3. Publishes to **Maven Central** (`io.github.scan-kenteken:kenteken-kit`)
+
+npm trusted publisher must list workflow **`ci.yml`** for **`scan-kenteken/kenteken-kit`**.
+
+### GitHub secrets for Maven (Repository → Settings → Secrets)
+
+| Secret | Purpose |
+|---|---|
+| `CENTRAL_PORTAL_USERNAME` | Portal user token username |
+| `CENTRAL_PORTAL_PASSWORD` | Portal user token password |
+| `SIGNING_KEY` | ASCII-armored PGP private key |
+| `SIGNING_PASSWORD` | Only if your key has a passphrase (omit otherwise — GitHub rejects empty secrets) |
+
+After CI uploads to Maven Central, open [central.sonatype.com/publishing](https://central.sonatype.com/publishing) to validate and click **Publish** (~15 min to sync).
+
+### Manual sync check
+
+```sh
+npm run version:check
 ```
 
 Existing codebases can also wrap the exports behind their own local adapter:
@@ -162,6 +205,11 @@ export {
   parseKenteken,
 } from "kenteken-kit";
 ```
+
+## Kotlin
+
+A Kotlin/JVM implementation is available in [`kotlin/`](./kotlin). See
+[`kotlin/README.md`](./kotlin/README.md) for Kotlin usage and Maven publishing.
 
 ## License
 

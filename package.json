@@ -1,6 +1,6 @@
 {
   "name": "kenteken-kit",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "Tiny Dutch kenteken formatter, parser, and validator toolkit.",
   "type": "module",
   "license": "MIT",
@@ -20,6 +20,7 @@
   },
   "files": [
     "dist",
+    "assets",
     "README.md",
     "LICENSE"
   ],
@@ -28,6 +29,9 @@
     "build": "npm run clean && tsc -p tsconfig.build.json",
     "test": "npm run build && node --test test/*.test.mjs",
     "typecheck": "tsc --noEmit",
+    "version:sync": "node scripts/sync-version.mjs",
+    "version:check": "node scripts/check-versions.mjs",
+    "version:bump": "node scripts/bump-version.mjs",
     "prepack": "npm run typecheck && npm test"
   },
   "keywords": [

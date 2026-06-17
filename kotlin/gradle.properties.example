@@ -1,0 +1,17 @@
+# Copy this file to gradle.properties (do not commit secrets).
+#
+# For local publish only, this file can stay empty.
+# For Maven Central publish set the values below.
+
+publishToMavenCentral=false
+
+# Central Publisher Portal user token (https://central.sonatype.com/account)
+# centralPortalUsername=
+# centralPortalPassword=
+#
+# Namespace for manual upload after ./gradlew publish (see README):
+centralPortalNamespace=io.github.scan-kenteken
+
+# ASCII-armored private key and passphrase for artifact signing
+# signingKey=
+# signingPassword=

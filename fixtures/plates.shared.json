@@ -1,0 +1,44 @@
+{
+  "valid": [
+    { "raw": "HJ1234", "formatted": "HJ-12-34", "series": 1 },
+    { "raw": "1234HJ", "formatted": "12-34-HJ", "series": 2 },
+    { "raw": "12HJ34", "formatted": "12-HJ-34", "series": 3 },
+    { "raw": "HJ12KL", "formatted": "HJ-12-KL", "series": 4 },
+    { "raw": "HJKL12", "formatted": "HJ-KL-12", "series": 5 },
+    { "raw": "12HJKL", "formatted": "12-HJ-KL", "series": 6 },
+    { "raw": "12HJK3", "formatted": "12-HJK-3", "series": 7 },
+    { "raw": "1HJK23", "formatted": "1-HJK-23", "series": 8 },
+    { "raw": "HJ123K", "formatted": "HJ-123-K", "series": 9 },
+    { "raw": "G001BB", "formatted": "G-001-BB", "series": 10 },
+    { "raw": "HJK12L", "formatted": "HJK-12-L", "series": 11 },
+    { "raw": "H12JKL", "formatted": "H-12-JKL", "series": 12 },
+    { "raw": "1HJ234", "formatted": "1-HJ-234", "series": 13 },
+    { "raw": "123HJ4", "formatted": "123-HJ-4", "series": 14 }
+  ],
+  "partial": [
+    { "raw": "kjr5", "formatted": "KJR-5" },
+    { "raw": "g001", "formatted": "G-001" },
+    { "raw": "ab", "formatted": "AB" },
+    { "raw": "12ab", "formatted": "12-AB" }
+  ],
+  "invalid": [
+    { "raw": "AB-12", "codes": ["too_short"] },
+    { "raw": "AB-12-34-56", "codes": ["too_long"] },
+    { "raw": "ABC-123", "codes": ["unknown_series"] }
+  ],
+  "forbidden": [
+    { "combination": "GVD", "plate": "99GVD9" },
+    { "combination": "KKK", "plate": "99KKK9" },
+    { "combination": "NSB", "plate": "99NSB9" },
+    { "combination": "PKK", "plate": "99PKK9" },
+    { "combination": "PSV", "plate": "99PSV9" },
+    { "combination": "TBS", "plate": "99TBS9" },
+    { "combination": "SS", "plate": "SS1212" },
+    { "combination": "SD", "plate": "12SD34" },
+    { "combination": "PVV", "plate": "99PVV9" },
+    { "combination": "SGP", "plate": "99SGP9" },
+    { "combination": "VVD", "plate": "99VVD9" },
+    { "combination": "FVD", "plate": "99FVD9" },
+    { "combination": "BBB", "plate": "99BBB9" }
+  ]
+}

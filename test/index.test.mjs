@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { describe, it } from "node:test";
 import {
   FORBIDDEN_COMBINATIONS,
@@ -10,6 +12,9 @@ import {
   parseKenteken,
 } from "../dist/index.js";
 
+const fixturesPath = new URL("../fixtures/plates.shared.json", import.meta.url);
+const fixtures = JSON.parse(readFileSync(fileURLToPath(fixturesPath), "utf8"));
+
 describe("normalizeKenteken", () => {
   it("uppercases and strips separators", () => {
     assert.equal(normalizeKenteken(" kjr-50.s "), "KJR50S");
@@ -17,24 +22,7 @@ describe("normalizeKenteken", () => {
 });
 
 describe("formatKenteken", () => {
-  const examples = [
-    ["HJ1234", "HJ-12-34", 1],
-    ["1234HJ", "12-34-HJ", 2],
-    ["12HJ34", "12-HJ-34", 3],
-    ["HJ12KL", "HJ-12-KL", 4],
-    ["HJKL12", "HJ-KL-12", 5],
-    ["12HJKL", "12-HJ-KL", 6],
-    ["12HJK3", "12-HJK-3", 7],
-    ["1HJK23", "1-HJK-23", 8],
-    ["HJ123K", "HJ-123-K", 9],
-    ["H123JK", "H-123-JK", 10],
-    ["HJK12L", "HJK-12-L", 11],
-    ["H12JKL", "H-12-JKL", 12],
-    ["1HJ234", "1-HJ-234", 13],
-    ["123HJ4", "123-HJ-4", 14],
-  ];
-
-  for (const [raw, formatted, series] of examples) {
+  for (const { raw, formatted, series } of fixtures.valid) {
     it(`formats series ${series}`, () => {
       assert.equal(formatKenteken(raw), formatted);
       assert.equal(parseKenteken(raw).series, series);
@@ -50,15 +38,11 @@ describe("formatKenteken", () => {
 });
 
 describe("formatKentekenPartial", () => {
-  it("formats unambiguous partial input", () => {
-    assert.equal(formatKentekenPartial("kjr5"), "KJR-5");
-    assert.equal(formatKentekenPartial("g001"), "G-001");
-  });
-
-  it("falls back to character runs for ambiguous partial input", () => {
-    assert.equal(formatKentekenPartial("ab"), "AB");
-    assert.equal(formatKentekenPartial("12ab"), "12-AB");
-  });
+  for (const { raw, formatted } of fixtures.partial) {
+    it(`formats partial input: ${raw}`, () => {
+      assert.equal(formatKentekenPartial(raw), formatted);
+    });
+  }
 });
 
 describe("parseKenteken", () => {
@@ -118,23 +102,7 @@ describe("parseKenteken", () => {
       "BBB",
     ]);
 
-    const sampleByCombination = {
-      GVD: "99-GVD-9",
-      KKK: "99-KKK-9",
-      NSB: "99-NSB-9",
-      PKK: "99-PKK-9",
-      PSV: "99-PSV-9",
-      TBS: "99-TBS-9",
-      SS: "12-SS-34",
-      SD: "12-SD-34",
-      PVV: "99-PVV-9",
-      SGP: "99-SGP-9",
-      VVD: "99-VVD-9",
-      FVD: "99-FVD-9",
-      BBB: "99-BBB-9",
-    };
-
-    for (const [combination, plate] of Object.entries(sampleByCombination)) {
+    for (const { combination, plate } of fixtures.forbidden) {
       assert.equal(
         parseKenteken(plate).issues.some((issue) => issue.code === "forbidden_combination" && issue.value === combination),
         true,
@@ -148,8 +116,8 @@ describe("parseKenteken", () => {
   });
 
   it("reports length and shape problems", () => {
-    assert.deepEqual(parseKenteken("AB-12").issues.map((issue) => issue.code), ["too_short"]);
-    assert.deepEqual(parseKenteken("AB-12-34-56").issues.map((issue) => issue.code), ["too_long"]);
-    assert.deepEqual(parseKenteken("ABC-123").issues.map((issue) => issue.code), ["unknown_series"]);
+    for (const { raw, codes } of fixtures.invalid) {
+      assert.deepEqual(parseKenteken(raw).issues.map((issue) => issue.code), codes);
+    }
   });
 });
