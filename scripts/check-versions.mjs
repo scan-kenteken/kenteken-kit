@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { gradleSnippet, mavenSnippet } from "./version-utils.mjs";
 
 const version = readFileSync("VERSION", "utf8").trim();
 const pkg = JSON.parse(readFileSync("package.json", "utf8"));
@@ -15,10 +16,7 @@ if (!kotlinBuild.includes('version = file("../VERSION").readText().trim()')) {
   process.exit(1);
 }
 
-const expectedGradleSnippet = `io.github.scan-kenteken:kenteken-kit:${version}`;
-const expectedMavenSnippet = `<version>${version}</version>`;
-
-if (!kotlinReadme.includes(expectedGradleSnippet) || !kotlinReadme.includes(expectedMavenSnippet)) {
+if (!kotlinReadme.includes(gradleSnippet(version)) || !kotlinReadme.includes(mavenSnippet(version))) {
   console.error("kotlin/README.md install snippets do not match VERSION");
   process.exit(1);
 }

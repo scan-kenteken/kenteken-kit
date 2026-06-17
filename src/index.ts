@@ -38,6 +38,11 @@ export type KentekenSeriesNumber =
   | 13
   | 14;
 
+// Compile-time guard: the highest KentekenSeriesNumber must equal the number of
+// defined series, so the two can't silently drift apart.
+const _seriesCountOk: (typeof SERIES_GROUPS)["length"] extends 14 ? true : never = true;
+void _seriesCountOk;
+
 export type KentekenIssueCode =
   | "too_short"
   | "too_long"
@@ -132,14 +137,9 @@ export function parseKenteken(raw: string): KentekenParseResult {
   const issues: KentekenIssue[] = [];
   let series: KentekenSeries | null = null;
 
-  if (normalized.length < KENTEKEN_LENGTH) {
+  if (normalized.length !== KENTEKEN_LENGTH) {
     issues.push({
-      code: "too_short",
-      message: "A kenteken must contain 6 letters or digits.",
-    });
-  } else if (normalized.length > KENTEKEN_LENGTH) {
-    issues.push({
-      code: "too_long",
+      code: normalized.length < KENTEKEN_LENGTH ? "too_short" : "too_long",
       message: "A kenteken must contain 6 letters or digits.",
     });
   } else {
@@ -210,8 +210,10 @@ function formatNormalized(normalized: string, series: KentekenSeries | null): st
   return series ? formatWithGroups(normalized, series.groups) : formatByCharacterRuns(normalized);
 }
 
+const SERIES_PATTERNS = new Map(KENTEKEN_SERIES.map((s) => [s, maskToRegExp(s.mask)]));
+
 function findSeries(normalized: string): KentekenSeries | null {
-  return KENTEKEN_SERIES.find(({ mask }) => matchesMask(normalized, mask)) ?? null;
+  return KENTEKEN_SERIES.find((s) => SERIES_PATTERNS.get(s)!.test(normalized)) ?? null;
 }
 
 function findDisallowedLetterIssues(normalized: string, series: KentekenSeries): KentekenIssue[] {
@@ -264,39 +266,36 @@ function splitByGroups(value: string, groups: GroupSizes): string[] {
   return parts;
 }
 
-function matchesMask(value: string, mask: string): boolean {
-  return value.length === mask.length && matchesMaskPrefix(value, mask);
+function maskCharClass(maskChar: string): string {
+  if (maskChar === "L") return "[A-Z]";
+  if (maskChar === "D") return "[0-9]";
+  return "";
+}
+
+function maskToRegExp(mask: string): RegExp {
+  return new RegExp(`^${[...mask].map(maskCharClass).join("")}$`);
 }
 
 function matchesMaskPrefix(value: string, mask: string): boolean {
-  return [...value].every((char, index) => matchesMaskCharacter(char, mask[index] ?? ""));
-}
-
-function matchesMaskCharacter(char: string, mask: string): boolean {
-  if (mask === "L") return isAsciiLetter(char);
-  if (mask === "D") return isAsciiDigit(char);
-  return false;
-}
-
-function isAsciiLetter(char: string): boolean {
-  return char >= "A" && char <= "Z";
-}
-
-function isAsciiDigit(char: string): boolean {
-  return char >= "0" && char <= "9";
+  const prefix = [...mask].slice(0, value.length).map(maskCharClass).join("");
+  return new RegExp(`^${prefix}$`).test(value);
 }
 
 function formatWithGroups(value: string, groups: GroupSizes): string {
   return splitByGroups(value, groups).filter(Boolean).join("-");
 }
 
+function splitCharacterRuns(value: string): RegExpMatchArray | null {
+  return value.match(/[A-Z]+|\d+/g);
+}
+
 function formatByCharacterRuns(value: string): string {
-  const groups = value.match(/[A-Z]+|\d+/g);
+  const groups = splitCharacterRuns(value);
   return groups?.length === 3 ? groups.join("-") : value;
 }
 
 function formatPartialByCharacterRuns(value: string): string {
-  const groups = value.match(/[A-Z]+|\d+/g);
+  const groups = splitCharacterRuns(value);
 
   if (!groups) {
     return "";

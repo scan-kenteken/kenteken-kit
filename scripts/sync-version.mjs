@@ -1,8 +1,9 @@
 import { readFileSync, writeFileSync } from "node:fs";
+import { SEMVER_RE, gradleSnippet, mavenSnippet, GRADLE_SNIPPET_RE, MAVEN_SNIPPET_RE } from "./version-utils.mjs";
 
 const version = readFileSync("VERSION", "utf8").trim();
 
-if (!/^\d+\.\d+\.\d+(-[A-Za-z0-9.]+)?$/.test(version)) {
+if (!SEMVER_RE.test(version)) {
   console.error(`Invalid VERSION: ${version}`);
   process.exit(1);
 }
@@ -22,8 +23,8 @@ writeFileSync(lockPath, `${JSON.stringify(lock, null, 2)}\n`);
 
 const kotlinReadmePath = "kotlin/README.md";
 const kotlinReadme = readFileSync(kotlinReadmePath, "utf8")
-  .replace(/io\.github\.scan-kenteken:kenteken-kit:[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.]+)?/g, `io.github.scan-kenteken:kenteken-kit:${version}`)
-  .replace(/<version>[0-9]+\.[0-9]+\.[0-9]+(?:-[A-Za-z0-9.]+)?<\/version>/g, `<version>${version}</version>`);
+  .replace(GRADLE_SNIPPET_RE, gradleSnippet(version))
+  .replace(MAVEN_SNIPPET_RE, mavenSnippet(version));
 writeFileSync(kotlinReadmePath, kotlinReadme);
 
 console.log(`Synced npm version to ${version}`);
