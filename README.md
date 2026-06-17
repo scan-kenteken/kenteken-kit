@@ -14,7 +14,7 @@ TypeScript, and Kotlin.
 | Platform | Package | Docs |
 |---|---|---|
 | JavaScript / TypeScript | [`kenteken-kit`](https://www.npmjs.com/package/kenteken-kit) | [`docs/npm.md`](./docs/npm.md) |
-| Kotlin / JVM | `io.github.scan-kenteken:kenteken-kit` | [`kotlin/README.md`](./kotlin/README.md) |
+| Kotlin / JVM | [`io.github.scan-kenteken:kenteken-kit`](https://repo1.maven.org/maven2/io/github/scan-kenteken/kenteken-kit/0.1.0/) | [`kotlin/README.md`](./kotlin/README.md) |
 
 Both implementations share fixtures from [`fixtures/plates.shared.json`](./fixtures/plates.shared.json)
 so formatter and validator behavior stays aligned across platforms.
