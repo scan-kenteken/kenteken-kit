@@ -122,5 +122,7 @@ fun readSigningKey(raw: String?): String? {
     else -> String(Base64.getDecoder().decode(text), Charsets.UTF_8)
   }
 
-  return armored.trim().takeIf { it.contains("BEGIN PGP PRIVATE KEY BLOCK") }
+  return armored.trim().takeIf {
+    it.contains("BEGIN PGP PRIVATE KEY BLOCK") || it.contains("BEGIN PGP SECRET KEY BLOCK")
+  }
 }

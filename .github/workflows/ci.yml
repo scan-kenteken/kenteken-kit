@@ -72,12 +72,16 @@ jobs:
           test -n "$CENTRAL_PORTAL_USERNAME" || { echo "CENTRALPORTALUSERNAME secret is not set"; exit 1; }
           test -n "$CENTRAL_PORTAL_PASSWORD" || { echo "CENTRALPORTALPASSWORD secret is not set"; exit 1; }
           test -n "$SIGNING_KEY" || { echo "SIGNING_KEY is not set"; exit 1; }
-          if [[ "$SIGNING_KEY" == *"BEGIN PGP PRIVATE KEY BLOCK"* ]]; then
+          if [[ "$SIGNING_KEY" == *"BEGIN PGP PUBLIC KEY BLOCK"* ]]; then
+            echo "SIGNING_KEY is a public key — export the private/secret key instead."
+            exit 1
+          elif [[ "$SIGNING_KEY" == *"BEGIN PGP PRIVATE KEY BLOCK"* ]] \
+            || [[ "$SIGNING_KEY" == *"BEGIN PGP SECRET KEY BLOCK"* ]]; then
             echo "SIGNING_KEY: armored private key"
-          elif printf '%s' "$SIGNING_KEY" | base64 -d 2>/dev/null | grep -q "BEGIN PGP PRIVATE KEY BLOCK"; then
+          elif printf '%s' "$SIGNING_KEY" | base64 -d 2>/dev/null | grep -qE "BEGIN PGP (PRIVATE|SECRET) KEY BLOCK"; then
             echo "SIGNING_KEY: base64-encoded armored private key"
           else
-            echo "SIGNING_KEY does not look like a PGP private key."
+            echo "SIGNING_KEY does not look like a PGP private key (length ${#SIGNING_KEY})."
             echo "Paste the full -----BEGIN PGP PRIVATE KEY BLOCK----- ... -----END PGP PRIVATE KEY BLOCK-----"
             echo "Or store it base64-encoded: gpg --armor --export-secret-keys <id> | base64 -w0"
             exit 1
