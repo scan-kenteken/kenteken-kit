@@ -1,6 +1,6 @@
 {
   "name": "kenteken-kit",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Tiny Dutch kenteken formatter, parser, and validator toolkit.",
   "type": "module",
   "license": "MIT",

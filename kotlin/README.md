@@ -9,7 +9,7 @@ Gradle Kotlin DSL:
 
 ```kotlin
 dependencies {
-  implementation("io.github.scan-kenteken:kenteken-kit:0.2.5")
+  implementation("io.github.scan-kenteken:kenteken-kit:0.2.6")
 }
 ```
 
@@ -19,7 +19,7 @@ Maven:
 <dependency>
   <groupId>io.github.scan-kenteken</groupId>
   <artifactId>kenteken-kit</artifactId>
-  <version>0.2.5</version>
+  <version>0.2.6</version>
 </dependency>
 ```
 
