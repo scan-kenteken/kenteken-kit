@@ -65,12 +65,12 @@ jobs:
 
       - name: Verify Maven release secrets
         env:
-          CENTRAL_PORTAL_USERNAME: ${{ secrets['CENTRAL _PORTAL_USERNAME'] }}
-          CENTRAL_PORTAL_PASSWORD: ${{ secrets['CENTRAL _PORTAL_PASSWORD'] }}
+          CENTRAL_PORTAL_USERNAME: ${{ secrets.CENTRAL_PORTAL_USERNAME || secrets.CENTRALPORTALUSERNAME || secrets['CENTRAL _PORTAL_USERNAME'] }}
+          CENTRAL_PORTAL_PASSWORD: ${{ secrets.CENTRAL_PORTAL_PASSWORD || secrets.CENTRALPORTALPASSWORD || secrets['CENTRAL _PORTAL_PASSWORD'] }}
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
         run: |
-          test -n "$CENTRAL_PORTAL_USERNAME" || { echo "CENTRAL _PORTAL_USERNAME secret is not set"; exit 1; }
-          test -n "$CENTRAL_PORTAL_PASSWORD" || { echo "CENTRAL _PORTAL_PASSWORD secret is not set"; exit 1; }
+          test -n "$CENTRAL_PORTAL_USERNAME" || { echo "Central Portal username secret is not set"; exit 1; }
+          test -n "$CENTRAL_PORTAL_PASSWORD" || { echo "Central Portal password secret is not set"; exit 1; }
           test -n "$SIGNING_KEY" || { echo "SIGNING_KEY is not set"; exit 1; }
           if [[ "$SIGNING_KEY" == *"BEGIN PGP PUBLIC KEY BLOCK"* ]]; then
             echo "SIGNING_KEY is a public key — export the private/secret key instead."
@@ -105,8 +105,8 @@ jobs:
       - name: Publish to Maven Central
         working-directory: kotlin
         env:
-          CENTRAL_PORTAL_USERNAME: ${{ secrets['CENTRAL _PORTAL_USERNAME'] }}
-          CENTRAL_PORTAL_PASSWORD: ${{ secrets['CENTRAL _PORTAL_PASSWORD'] }}
+          CENTRAL_PORTAL_USERNAME: ${{ secrets.CENTRAL_PORTAL_USERNAME || secrets.CENTRALPORTALUSERNAME || secrets['CENTRAL _PORTAL_USERNAME'] }}
+          CENTRAL_PORTAL_PASSWORD: ${{ secrets.CENTRAL_PORTAL_PASSWORD || secrets.CENTRALPORTALPASSWORD || secrets['CENTRAL _PORTAL_PASSWORD'] }}
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
         run: |
           KEY_FILE="${RUNNER_TEMP}/signing.key"
