@@ -1,3 +1,6 @@
+import java.io.File
+import java.util.Base64
+
 plugins {
   kotlin("jvm") version "2.0.21"
   kotlin("plugin.serialization") version "2.0.21"
@@ -92,7 +95,11 @@ publishing {
 }
 
 signing {
-  val signingKey = providers.gradleProperty("signingKey").orNull ?: System.getenv("SIGNING_KEY")
+  val signingKey = readSigningKey(
+    providers.gradleProperty("signingKey").orNull
+      ?: System.getenv("SIGNING_KEY_FILE")?.let { File(it).readText() }
+      ?: System.getenv("SIGNING_KEY"),
+  )
   val signingPassword = providers.gradleProperty("signingPassword").orNull ?: System.getenv("SIGNING_PASSWORD")
   val publishToMavenCentral = providers.gradleProperty("publishToMavenCentral").orNull == "true"
 
@@ -103,4 +110,17 @@ signing {
     useGpgCmd()
     sign(publishing.publications)
   }
+}
+
+fun readSigningKey(raw: String?): String? {
+  if (raw.isNullOrBlank()) return null
+
+  val text = raw.trim().removePrefix("\uFEFF")
+  val armored = when {
+    text.contains("BEGIN PGP") ->
+      if (text.contains("\\n")) text.replace("\\n", "\n") else text
+    else -> String(Base64.getDecoder().decode(text), Charsets.UTF_8)
+  }
+
+  return armored.trim().takeIf { it.contains("BEGIN PGP PRIVATE KEY BLOCK") }
 }

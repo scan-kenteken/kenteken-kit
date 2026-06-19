@@ -72,6 +72,16 @@ jobs:
           test -n "$CENTRAL_PORTAL_USERNAME" || { echo "CENTRALPORTALUSERNAME secret is not set"; exit 1; }
           test -n "$CENTRAL_PORTAL_PASSWORD" || { echo "CENTRALPORTALPASSWORD secret is not set"; exit 1; }
           test -n "$SIGNING_KEY" || { echo "SIGNING_KEY is not set"; exit 1; }
+          if [[ "$SIGNING_KEY" == *"BEGIN PGP PRIVATE KEY BLOCK"* ]]; then
+            echo "SIGNING_KEY: armored private key"
+          elif printf '%s' "$SIGNING_KEY" | base64 -d 2>/dev/null | grep -q "BEGIN PGP PRIVATE KEY BLOCK"; then
+            echo "SIGNING_KEY: base64-encoded armored private key"
+          else
+            echo "SIGNING_KEY does not look like a PGP private key."
+            echo "Paste the full -----BEGIN PGP PRIVATE KEY BLOCK----- ... -----END PGP PRIVATE KEY BLOCK-----"
+            echo "Or store it base64-encoded: gpg --armor --export-secret-keys <id> | base64 -w0"
+            exit 1
+          fi
 
       - name: Publish to npm
         run: |
@@ -95,6 +105,13 @@ jobs:
           CENTRAL_PORTAL_PASSWORD: ${{ secrets.CENTRALPORTALPASSWORD }}
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
         run: |
+          KEY_FILE="${RUNNER_TEMP}/signing.key"
+          if [[ "$SIGNING_KEY" == *"BEGIN PGP"* ]]; then
+            printf '%s\n' "$SIGNING_KEY" > "$KEY_FILE"
+          else
+            printf '%s' "$SIGNING_KEY" | base64 -d > "$KEY_FILE"
+          fi
+          export SIGNING_KEY_FILE="$KEY_FILE"
           ./gradlew publish -PpublishToMavenCentral=true
           AUTH="$(printf '%s:%s' "$CENTRAL_PORTAL_USERNAME" "$CENTRAL_PORTAL_PASSWORD" | base64 -w0)"
           curl --fail-with-body -sS -X POST \
