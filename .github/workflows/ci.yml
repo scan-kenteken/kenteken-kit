@@ -64,12 +64,12 @@ jobs:
 
       - name: Verify Maven release secrets
         env:
-          CENTRAL_PORTAL_USERNAME: ${{ secrets.CENTRAL_PORTAL_USERNAME }}
-          CENTRAL_PORTAL_PASSWORD: ${{ secrets.CENTRAL_PORTAL_PASSWORD }}
+          CENTRAL_PORTAL_USERNAME: ${{ secrets.CENTRALPORTALUSERNAME }}
+          CENTRAL_PORTAL_PASSWORD: ${{ secrets.CENTRALPORTALPASSWORD }}
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
         run: |
-          test -n "$CENTRAL_PORTAL_USERNAME" || { echo "CENTRAL_PORTAL_USERNAME is not set"; exit 1; }
-          test -n "$CENTRAL_PORTAL_PASSWORD" || { echo "CENTRAL_PORTAL_PASSWORD is not set"; exit 1; }
+          test -n "$CENTRAL_PORTAL_USERNAME" || { echo "CENTRALPORTALUSERNAME secret is not set"; exit 1; }
+          test -n "$CENTRAL_PORTAL_PASSWORD" || { echo "CENTRALPORTALPASSWORD secret is not set"; exit 1; }
           test -n "$SIGNING_KEY" || { echo "SIGNING_KEY is not set"; exit 1; }
 
       - name: Publish to npm
@@ -90,8 +90,8 @@ jobs:
       - name: Publish to Maven Central
         working-directory: kotlin
         env:
-          CENTRAL_PORTAL_USERNAME: ${{ secrets.CENTRAL_PORTAL_USERNAME }}
-          CENTRAL_PORTAL_PASSWORD: ${{ secrets.CENTRAL_PORTAL_PASSWORD }}
+          CENTRAL_PORTAL_USERNAME: ${{ secrets.CENTRALPORTALUSERNAME }}
+          CENTRAL_PORTAL_PASSWORD: ${{ secrets.CENTRALPORTALPASSWORD }}
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
         run: |
           ./gradlew publish -PpublishToMavenCentral=true
