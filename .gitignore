@@ -10,4 +10,5 @@ coverage/
 /kotlin/.gradle/
 /kotlin/build/
 /kotlin/gradle.properties
+.signing-key.asc
 AGENTS.local.md
